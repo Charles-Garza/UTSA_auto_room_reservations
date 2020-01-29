@@ -2,6 +2,7 @@ import sys
 import os
 import re
 from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QLabel
 from PyQt5.QtGui import QPainter, QColor
@@ -75,9 +76,16 @@ class PaintWidget(QWidget):
 
 def quickReserve():
     #Setup selenium requirements
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")
     chromedriver = "C:\\Users\\charl\\Downloads\\chromedriver"
+
     os.environ["webdriver.chrome.driver"] = chromedriver
     driver = webdriver.Chrome(chromedriver)
+
+    # options = webdriver.ChromeOptions()
+    # options.add_argument("--headless")
+    # driver = webdriver.Chrome(chromedriver, options=options)
     driver.get("https://utsa.evanced.info/dibs/")
 
     count = 1 #To iterate through items
@@ -148,7 +156,7 @@ def quickReserve():
 
         # #input phone number
         phoneNumber = driver.find_element_by_id("Phone")
-        phoneNumber.send_keys("2104522462")
+        phoneNumber.send_keys("phonenumber")
 
         driver.find_element_by_id("btnCallDibs").click()
 
