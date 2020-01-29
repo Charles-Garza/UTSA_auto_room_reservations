@@ -17,8 +17,6 @@ password = driver.find_element_by_id("password")
 #Use credentials
 username.send_keys("abc123")
 password.send_keys("password")
-# username.send_keys("ewn133")
-# password.send_keys("charles david garza")
 
 #Click the login button
 driver.find_element_by_xpath("/html/body/div/div/div/div[1]/form/div[3]/button").click()
