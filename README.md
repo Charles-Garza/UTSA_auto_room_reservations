@@ -1,5 +1,5 @@
-# Automatic study rooms
-This is a program designed around automation that makes reservations for study rooms at the University of Texas at San Antonio on behalf of the user
+# Automatated study room reservations
+This is a program designed around automation that handles reserving study rooms automatically at the University of Texas at San Antonio.
 
 **Dependencies needed:**
 
@@ -27,15 +27,14 @@ The instructions to do so are as follows:
     **Windows:**
     Extract the file to wherever you would like. 
     
-    _If you have any difficulties with installing chromium refer to the documentation for chromium [here](https://chromedriver.chromium.org/getting-started)_
+    _If you have any difficulties with installing chromium refer to the documentation provided [here](https://chromedriver.chromium.org/getting-started)_
     
 3. Step 3:
-    Install PyQt5.
     
-    _Install by running this command_: **pip install PyQt5**
+    Install PyQt5 by running this command: `pip install PyQt5`
 
-After you have installed all the dependencies, you must edit the auto.py file to refernce the chromedriver path to the location of your chromedriver file.
+4. Step 4:
 
-**After this is done, you can now run the project by executing this command:**
+    After you have installed all the dependencies, you must edit the auto.py file to refernce the chromedriver path to the location of your chromedriver file.
 
-`python auto.py`
+**Now to execute the program run the command**: `python auto.py`
