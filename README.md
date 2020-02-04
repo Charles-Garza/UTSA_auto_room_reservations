@@ -9,8 +9,6 @@ This is a program designed around automation that handles reserving study rooms 
 
 - PyQt5
 
-- A secrets.py file
-
 **Getting started:**
     
 First you must download and install the necessary dependencies.
@@ -41,20 +39,13 @@ The instructions to do so are as follows:
 
 5. Step 5:
     
-    Create your secrets.py file formatted like this:
-    ```
-    username = "abc123"
-    password = "password"
-    phonenumber = "1234567890"
-    ```
-    The phone number variable needs to be declared, but is optional for if you want mobile notificaitons. 
-    
-    If you do not want mobile notifications, then declare your secrets.py file like so:
+    Edit the secrets.py file to contain your valid utsa login credentials and phone number.
+
+    If you do not want mobile notifications, then edit your secrets.py file like so:
     ```
     username = "abc123"
     password = "password"
     phonenumber = ""
-
     ```
 
 **Now to execute the program run the command**: `python auto.py`
