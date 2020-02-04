@@ -1,14 +1,22 @@
-import sys
-import os
-import re
+import sys, os, re, time
+from datetime import datetime, date
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-
-from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QLabel
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from secrets import username, password, phonenumber
+from PyQt5.QtWidgets import (
+    QApplication, 
+    QWidget, 
+    QPushButton, 
+    QLabel, 
+    QMessageBox)
+from PyQt5 import QtCore
 from PyQt5.QtGui import QPainter, QColor
-from PyQt5.QtCore import pyqtSlot
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import pyqtSlot, Qt, QTimer
 
+allReservations = []
 
 class App(QWidget):
 
@@ -36,32 +44,35 @@ class App(QWidget):
         self.m = PaintWidget(self)
         self.m.resize(self.width, self.height)
 
-        #Add label and adjust styling
-        title = QLabel(self)
-        title.setText("Automatic Room Reservations")
+        # Add title label and adjust styling
+        title = QLabel("Automatic Room Reservations", self)
         title.setStyleSheet("QLabel {color: white; font: 30pt Comic Sans MS}")
-        title.move(55,30)
+        title.setFixedWidth(640)
+        title.move(0,30)
+        title.setAlignment(Qt.AlignCenter)
 
-        # Add label and adjust styling
-        title = QLabel(self)
-        title.setText("Quickly Schedule A Reservation")
-        title.setStyleSheet("QLabel {color: white; font: 18pt Comic Sans MS}")
-        title.move(150, 380)
+        # Add sub title label and adjust styling
+        subTitleLabel = QLabel("Automated Reservations:", self)
+        subTitleLabel.setStyleSheet("QLabel {color: white; font: 18pt Comic Sans MS}")
+        subTitleLabel.setFixedWidth(640)
+        subTitleLabel.move(0, 380)
+        subTitleLabel.setAlignment(Qt.AlignCenter)
 
-        #Add quick search button and adjust styling
-        quickSearch = QPushButton('Quick reserve', self)
-        quickSearch.setToolTip('Click this button to reserve a room now')
-        quickSearch.move(270, 420)
-        quickSearch.setStyleSheet("QPushButton {background-color:rgb(18, 42, 80); color: white;}")
+        # Add quick search button and adjust styling
+        quickSearchBtn = QPushButton("Start Automation", self)
+        quickSearchBtn.setToolTip('Click this button to reserve a room now')
+        quickSearchBtn.move(270, 420)
+        quickSearchBtn.setStyleSheet("QPushButton {background-color:rgb(18, 42, 80); color: white;}")
 
-        #Attach button to click action
-        quickSearch.clicked.connect(self.on_click)
+        self.worker = WorkerObject()
+        self.thread = QtCore.QThread()
+        self.worker.moveToThread(self.thread)
+        self.thread.start()
 
-        self.show()
-
-    @pyqtSlot()
-    def on_click(self):
-        quickReserve()
+        #Attach button to click action and start thread
+        quickSearchBtn.clicked.connect(self.worker.loop)
+        
+        self.show() # show the window      
 
 class PaintWidget(QWidget):
     def paintEvent(self, event):
@@ -74,96 +85,141 @@ class PaintWidget(QWidget):
         qp.setBrush(QColor(241, 90, 37))
         qp.drawRect(0, 0, 640, 580)
 
-def quickReserve():
-    #Setup selenium requirements
-    chrome_options = Options()
-    chrome_options.add_argument("--headless")
-    chromedriver = "C:\\Users\\charl\\Downloads\\chromedriver"
+class WorkerObject(QtCore.QObject):
+    def __init__(self):
+        super(WorkerObject, self).__init__()
 
-    os.environ["webdriver.chrome.driver"] = chromedriver
-    driver = webdriver.Chrome(chromedriver)
+    def loop(self):
+        try:
+            #Setup selenium requirements
 
-    # options = webdriver.ChromeOptions()
-    # options.add_argument("--headless")
-    # driver = webdriver.Chrome(chromedriver, options=options)
-    driver.get("https://utsa.evanced.info/dibs/")
+            # Example for mac users
+            chromedriver = "/usr/local/bin/chromedriver"
 
-    count = 1 #To iterate through items
+            # Example for windows users
+            #chromedriver = "C:\\Users\\charl\\Downloads\\chromedriver"
 
-    # #Find username and password fields
-    username = driver.find_element_by_id("username")
-    password = driver.find_element_by_id("password")
+            os.environ["webdriver.chrome.driver"] = chromedriver    
+            
+            options = webdriver.ChromeOptions()
+            options.add_argument("--headless")
+            
+            while True:
+                d = datetime.now()
+                day = d.isoweekday()
+                
+                if len(allReservations) != 1 and (day == 2 or day == 4):
+                    driver = webdriver.Chrome(chromedriver, options=options)
+                    driver.get("https://utsa.evanced.info/dibs/")
+                    autoReserve(self, driver) 
+                else:
+                    print("Not time to search yet!")
 
-    # #Use credentials
-    username.send_keys("abc123")
-    password.send_keys("password")
+                if len(allReservations) != 0:
+                    firstTime = allReservations[0]
+                    hour = int(firstTime[8:9]) + 2
+                    firstTime = '1' + str(hour) + firstTime[9:12]
 
-    # #Click the login button
-    driver.find_element_by_xpath("/html/body/div/div/div/div[1]/form/div[3]/button").click()
+                    today = date.today().strftime("%Y-%m-%d")
+                    timestamp = (str(today) + " " + firstTime)
+                    reservationTime = datetime.strptime(timestamp, '%Y-%m-%d %H:%M')
+ 
+                    if d > reservationTime:
+                        allReservations.remove(allReservations[0])
+
+                time.sleep(900) # 15 seconds then start search again
+        except KeyboardInterrupt:
+            print("Program was killed")
+
+def autoReserve(self, driver):
+    # Find username and password fields
+    un = driver.find_element_by_id("username")
+    pw = driver.find_element_by_id("password")
+    count = 1 # Will be used to iterate through items
+
+    # Use credentials
+    un.send_keys(username)
+    pw.send_keys(password)
+
+    # Click the login button
+    clickButton(driver, "/html/body/div/div/div/div[1]/form/div[3]/button")
 
     try:
-        # #Select the room size
-        driver.find_element_by_xpath("//*[@id='SelectedRoomSize']/option[2]").click()
+        # First wait 3 seconds then select the room size desired
+        WebDriverWait(driver, 3).until(EC.element_to_be_clickable((By.XPATH, "//*[@id='SelectedRoomSize']/option[2]"))).click()
 
+        # Select duration
+        clickButton(driver, "//*[@id='SelectedTime']/option[2]")
+        clickButton(driver, "//*[@id='frmSearch']/div[2]/div/div[3]/input")
 
-        # #Select duration
-        driver.find_element_by_xpath("//*[@id='SelectedTime']/option[2]").click()
-
-        driver.find_element_by_xpath("//*[@id='frmSearch']/div[2]/div/div[3]/input").click()
-
-        # #Click on JPL
-        driver.find_element_by_xpath("//*[@id='frmBuildings']/div/div/div[3]").click()
-
+        # Click on JPL
+        clickButton(driver, "//*[@id='frmBuildings']/div/div/div[3]")
+        
         container = driver.find_elements_by_class_name("item-link")
 
         for item in container:
             name = item.find_element_by_xpath("//*[@id='frmTimes']/div/div/div["+str(count)+"]")
             count += 1
-            print(name.text)
-            if re.match("2:00 PM-4:00 PM", name.text):
+            time = name.text
+            print(time)
+            if re.match("2:00 PM-4:00 PM", time):
                item.click()
+               count = 1
                break
 
-        count = 1
+        if count == 1:
+            print("Time slot available!")
+            reserveRoom(self, driver, count, time)
+        else:
+            print("\nNo time slot available!")
+            driver.close()    
+    except Exception as e:
+        print(e)
+        #print("\nThere seemed to be an error here")
+        driver.close()
 
-        rooms = driver.find_elements_by_class_name("item-link")
-        clicked = 0
+def reserveRoom(self, driver, count, time):
+    rooms = driver.find_elements_by_class_name("item-link")
+    clicked = False
+    saved = False
 
-        for item in rooms:
-            roomNumber = item.find_element_by_xpath("//*[@id='frmRooms']/div/div/div["+str(count)+"]")
-            count += 1
-            print(roomNumber.text)
-            if re.match(" Room 3[0-9]", roomNumber.text):
-                item.click()
-                clicked = 1
-                break
+    for item in rooms:
+        roomNumber = item.find_element_by_xpath("//*[@id='frmRooms']/div/div/div["+str(count)+"]")
 
-        count  = 1
+        count += 1
+        text = roomNumber.text
+        print(text)
 
-        if clicked != 1:
-            for item in rooms:
-                roomNumber = item.find_element_by_xpath("//*[@id='frmRooms']/div/div/div[" + str(count) + "]")
-                count += 1
-                print(roomNumber.text)
-                if re.match(" Room 2[5-9]", roomNumber.text):
-                    item.click()
-                    break
-                elif re.match(" Room 4[0-2]", roomNumber.text):
-                    item.click()
-                    break
+        if re.match(" Room 3[0-9]", text):
+            item.click()
+            clicked = True
+            break
+                
+        if re.match(" Room 2[5-9]", text) and saved != True:
+            savedItem = item
+            saved = True
+        elif re.match(" Room 4[0-2]", text) and saved != True:
+            savedItem = item
+            saved = True
+                        
+    if clicked == False:
+        savedItem.click() 
 
-        count = 1
-
-        # #input phone number
+    # input phone number
+    try:
+        # Optional element
         phoneNumber = driver.find_element_by_id("Phone")
-        phoneNumber.send_keys("phonenumber")
+        phoneNumber.send_keys(phonenumber)
 
         driver.find_element_by_id("btnCallDibs").click()
+        allReservations.append(time)
+        print("\nReservation successful!\nYou reserved: " + text)
+    except Exception:
+        print("No preferred rooms were found!")
+    driver.close()
 
-        driver.close()
-    except:
-        print("error")
-        driver.close()
+def clickButton(driver, xpath):
+    driver.find_element_by_xpath(xpath).click()
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
