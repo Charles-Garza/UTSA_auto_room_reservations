@@ -152,15 +152,18 @@ class WorkerObject(QtCore.QObject):
                 else:
                     print('Not time to search yet! Current time:', d)
 
-                    # Sleep for 30 minutes then check if tuesday/thursday
-                    time.sleep(18000)
+                    # Sleep for 5 minutes then check if tuesday/thursday
+                    num = 0
+                    while num < 300 and self.threadActive:
+                        time.sleep(1) 
+                        num += 1
 
         except Exception as e:
             print("Something went wrong", e)
 
     # Function that will stop the thread
     def stop(self):
-        print("\n<======= Stopping thread ======>\n")
+        print("<======= Stopping thread ======>\n")
         self.threadActive = False
 
 
@@ -209,7 +212,7 @@ def auto_reserve(self, driver):
         # Show that a time is available to select
         if count == 1:
             print("Time slot available!\n" + time_available)
-            reserve_room(driver, count, time_available)
+            reserve_room(self, driver, count, time_available)
         # No time was available to select
         else: 
             print("\nNo time slot available!")
@@ -228,7 +231,7 @@ def choose_next_week_time(driver):
     click_button(driver, "//*[@id='SelectedSearchDate']/option[8]")
 
 
-def reserve_room(driver, count, time_available):
+def reserve_room(self, driver, count, time_available):
     rooms = driver.find_elements_by_class_name("item-link")
     clicked = False
     saved = False
@@ -270,11 +273,19 @@ def reserve_room(driver, count, time_available):
         print("\nReservation successful!\nYou reserved: " + text)
         
         driver.close() # Close the browser
-        time.sleep(86400)  # Sleep 1 day then start search again
+        #time.sleep(86400)  # Sleep 1 day then start search again
+        num = 0
+        while num < 86400 and self.threadActive:
+            time.sleep(1) # Sleep for 5 minutes
+            num += 1
+
     except Exception:
         print("No preferred rooms were found!")
         driver.close() # Close the browser
-        time.sleep(300) # Sleep for 5 minutes
+        num = 0
+        while num < 300 and self.threadActive:
+            time.sleep(1) # Sleep for 5 minutes
+            num += 1
 
 # Function that will click each link
 def click_button(driver, xpath):
