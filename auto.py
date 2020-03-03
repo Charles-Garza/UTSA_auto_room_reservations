@@ -22,17 +22,17 @@ class App(QWidget):
     def __init__(self):
         super().__init__()
         self.title = 'Auto reservations - UTSA study rooms'
-        self.left = 350
-        self.top = 250
-        self.width = 640
-        self.height = 580
+        self.left = 150
+        self.top = 50
+        self.width = 440
+        self.height = 280
         self.initUI()
     
     # initialize the additional components of GUI
     def initUI(self):
         self.setWindowTitle(self.title)
         self.setGeometry(self.left, self.top, self.width, self.height)
-        self.setFixedSize(640, 580)
+        self.setFixedSize(420, 180)
 
         # Set window background color
         self.setAutoFillBackground(True)
@@ -46,22 +46,23 @@ class App(QWidget):
 
         # Add title label and adjust styling
         title = QLabel("Automatic Room Reservations", self)
-        title.setStyleSheet("QLabel {color: white; font: 30pt Comic Sans MS}")
-        title.setFixedWidth(640)
-        title.move(0,30)
+        title.setStyleSheet("QLabel {color: white; font: 24pt Comic Sans MS}")
+        title.setFixedWidth(340)
+        title.move(40, 10)
         title.setAlignment(Qt.AlignCenter)
 
         # Add sub title label and adjust styling
         subTitleLabel = QLabel("Automated Reservations:", self)
         subTitleLabel.setStyleSheet("QLabel {color: white; font: 18pt Comic Sans MS}")
-        subTitleLabel.setFixedWidth(640)
-        subTitleLabel.move(0, 280)
+        subTitleLabel.setFixedWidth(340)
+        subTitleLabel.move(40, 50)
         subTitleLabel.setAlignment(Qt.AlignCenter)
 
         # Add quick search button and adjust styling
         self.quickSearchBtn = QPushButton("Start Automation", self)
         self.quickSearchBtn.setToolTip('Click this button to reserve a room now')
-        self.quickSearchBtn.move(270, 320)
+        self.quickSearchBtn.move(145, 80)
+        self.quickSearchBtn.resize(140, 25)
         self.quickSearchBtn.setStyleSheet("QPushButton {background-color:rgb(18, 42, 80); color: white;}")
 
         # Create the thread objects
@@ -77,14 +78,14 @@ class App(QWidget):
         # Cancel label
         self.cancel_lbl = QLabel("Cancel your reservations:", self)
         self.cancel_lbl.setStyleSheet("QLabel {color: white; font: 18pt Comic Sans MS}")
-        self.cancel_lbl.setFixedWidth(640)
-        self.cancel_lbl.move(0, 380)
+        self.cancel_lbl.setFixedWidth(340)
+        self.cancel_lbl.move(40, 110)
         self.cancel_lbl.setAlignment(Qt.AlignCenter)
 
         # Kill the thread from this button
-        self.cancel_btn = QPushButton("Click this button to cancel", self)
+        self.cancel_btn = QPushButton("Stop", self)
         self.cancel_btn.setToolTip('Click this button to cancel automatic reservations')
-        self.cancel_btn.move(245, 420)
+        self.cancel_btn.move(180, 140)
         self.cancel_btn.setStyleSheet("QPushButton {background-color:rgb(18, 42, 80); color: white;}")
         self.cancel_btn.clicked.connect(self.cancel)
 
@@ -93,13 +94,14 @@ class App(QWidget):
     # function will change button label once clicked and set threads 
     # activity to true
     def on_click(self):
-        self.quickSearchBtn.resize(130, 25)
+        self.quickSearchBtn.resize(140, 25)
         self.quickSearchBtn.setText("Clicked and running!")
         self.worker.threadActive = True
 
     # Function will kill the active thread
     def cancel(self):
         self.worker.stop()
+        self.quickSearchBtn.resize(140, 25)
         self.quickSearchBtn.setText("Restart Automation")
 
 
